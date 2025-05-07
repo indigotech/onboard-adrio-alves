@@ -3,9 +3,9 @@ services:
     image: postgres:15.4
     container_name: localdb
     environment:
-      - POSTGRES_USER= postgres_hello_world
-      - POSTGRES_PASSWORD= postgres_hello_world
-      - POSTGRES_DB= postgres_hello_world
+      - POSTGRES_USER=postgres_hello_world
+      - POSTGRES_PASSWORD=postgres_hello_world
+      - POSTGRES_DB=postgres_hello_world
     ports:
       - "5432:5432"
     volumes:
@@ -17,6 +17,6 @@ services:
     volumes:
       - ./db/dumps:/app-db-dumps
     environment:
-      - POSTGRES_USER= postgres_hello_world_test
-      - POSTGRES_PASSWORD= postgres_hello_world_test
-      - POSTGRES_DB= postgres_hello_world_test
+      - POSTGRES_USER=postgres_hello_world_test
+      - POSTGRES_PASSWORD=postgres_hello_world_test
+      - POSTGRES_DB=postgres_hello_world_test
