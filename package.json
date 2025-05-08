@@ -9,7 +9,8 @@
     "dev": "nodemon dist/index.js",
     "lint": "biome check .",
     "format": "biome format .",
-    "db:codegen": "prisma migrate dev --name init && prisma generate"
+    "db:migrate": "prisma migrate dev",
+    "db:codegen": "prisma generate"
   },
   "keywords": [],
   "author": "",
