@@ -24,3 +24,6 @@ dist/
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Test Scripts
+test_db.ts

@@ -1,13 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "files": {
-    "ignore": [
-      "**/node_modules/*",
-      "**/dist/*",
-      "**/static/*",
-      "**/generated/*",
-      "**/cache/*"
-    ]
+    "ignore": ["**/node_modules/*", "**/dist/*", "**/static/*", "**/generated/*", "**/cache/*"]
   },
   "linter": {
     "enabled": true,
