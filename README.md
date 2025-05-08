@@ -40,20 +40,46 @@ Before running the project, ensure you have the following installed:
 
 3. Set up the environment variables:
    - Create a `.env` file in the root directory.
-   - Add the following variables:
-     ```env
-     DATABASE_URL=postgresql://<username>:<password>@localhost:5432/postgres_hello_world
-     ```
-
-4. Start the PostgreSQL database using Docker:
+   - Use the provided `.env.example` file as a reference:
    ```bash
-   docker-compose up -d
+   cp .env.example .env
    ```
 
-5. Run database migrations and generate Prisma client:
-   ```bash
-   npm run db:codegen
-   ```
+### Setup Options
+
+#### Option 1: Full Docker & Database Setup
+
+Recommended for:
+
+- New developers
+- Full local development environment
+
+```bash
+# 1. Start PostgreSQL container
+docker-compose up -d --wait
+
+# 2. Create database schema and generate client
+npm run db:migrate
+
+# 3. Start application
+npm run dev
+```
+
+#### Option 2: Client Generation Only
+
+Use when:
+
+- Connecting to an existing database
+- Running tests
+- CI/CD pipelines
+
+```bash
+# Generate TypeScript client
+npm run db:generate
+
+# Start application (ensure DB is available)
+npm run dev
+```
 
 ## Run and Debug
 
