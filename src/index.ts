@@ -1,8 +1,9 @@
+import { PrismaClient, type User } from '@prisma/client';
+import bcrypt from 'bcrypt';
 import express from 'express';
 import type { Request, Response } from 'express';
-import { PrismaClient, type User } from '@prisma/client';
 
-import { validadeBody, ValidationError } from './utils';
+import { ValidationError, validadeBody } from './utils';
 
 const app = express();
 const port: number = 3000;
@@ -21,16 +22,23 @@ app.post('/users', async (req: Request<User>, res: Response) => {
 
     const userInput = req.body;
 
+    // Hash the password using bcrypt
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(userInput.password, saltRounds);
+
     // Save user to the database
-    const user = await prisma.user.create({
+    const savedUser = await prisma.user.create({
       data: {
         name: userInput.name,
         email: userInput.email,
-        password: userInput.password,
+        password: hashedPassword,
         birthdate: userInput.birthdate ? new Date(userInput.birthdate) : undefined,
       },
     });
-    res.status(201).json(user);
+
+    // Do not return the password in the response
+    const { password: _, ...userWithoutPassword } = savedUser;
+    res.status(201).json(userWithoutPassword);
   } catch (error) {
     console.error(error);
     if (error instanceof ValidationError) {
