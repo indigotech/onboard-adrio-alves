@@ -10,7 +10,7 @@ datasource db {
 model User {
   id        Int       @id(map: "user_pk") @default(autoincrement())
   name      String    @db.VarChar
-  email     String    @db.VarChar
+  email     String    @unique @db.VarChar
   password  String    @db.VarChar
   birthdate DateTime? @db.Timestamp(6)
 }
