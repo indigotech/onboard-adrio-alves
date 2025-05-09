@@ -33,7 +33,6 @@ export async function validadeBody(body: unknown) {
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email: input.email } });
-  console.log('existingUser', existingUser);
   if (existingUser) {
     throw new ValidationError('Email already exists.');
   }
