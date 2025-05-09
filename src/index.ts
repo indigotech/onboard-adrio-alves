@@ -5,6 +5,8 @@ import type { Request, Response } from 'express';
 
 import { ValidationError, validadeBody } from './utils';
 
+const SALT_ROUNDS = 10;
+
 const app = express();
 const port: number = 3000;
 
@@ -19,14 +21,10 @@ app.get('/', (req: Request, res: Response) => {
 app.post('/users', async (req: Request<User>, res: Response) => {
   try {
     await validadeBody(req.body);
-
     const userInput = req.body;
 
-    // Hash the password using bcrypt
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(userInput.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(userInput.password, SALT_ROUNDS);
 
-    // Save user to the database
     const savedUser = await prisma.user.create({
       data: {
         name: userInput.name,

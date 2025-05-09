@@ -18,7 +18,6 @@ export async function validadeBody(body: User) {
     throw new ValidationError('Email, name, and password are required.');
   }
 
-  // Password validation: at least 6 chars, at least 1 letter and 1 digit
   const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{6,}$/;
   if (!passwordRegex.test(body.password)) {
     throw new ValidationError(
@@ -26,7 +25,6 @@ export async function validadeBody(body: User) {
     );
   }
 
-  // Birthdate validation (if provided)
   if (
     body.birthdate &&
     Number.isNaN(Date.parse(typeof body.birthdate === 'string' ? body.birthdate : body.birthdate.toISOString()))
@@ -34,7 +32,6 @@ export async function validadeBody(body: User) {
     throw new ValidationError('Invalid birthdate format. Use YYYY-MM-DD.');
   }
 
-  // Email uniqueness check
   const existingUser = await prisma.user.findUnique({ where: { email: body.email } });
   console.log('existingUser', existingUser);
   if (existingUser) {
