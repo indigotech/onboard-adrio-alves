@@ -10,7 +10,8 @@
     "lint": "biome check .",
     "format": "biome format .",
     "db:migrate": "prisma migrate dev",
-    "db:codegen": "prisma generate"
+    "db:codegen": "prisma generate",
+    "test": "mocha"
   },
   "keywords": [],
   "author": "",
@@ -24,10 +25,13 @@
     "@biomejs/biome": "1.9.4",
     "@types/bcrypt": "5.0.2",
     "@types/express": "5.0.1",
+    "@types/mocha": "10.0.10",
     "@types/node": "20.0.0",
     "concurrently": "9.1.2",
+    "mocha": "11.2.2",
     "nodemon": "3.1.10",
     "prisma": "6.7.0",
+    "ts-node": "10.9.2",
     "typescript": "5.8.3"
   }
 }
