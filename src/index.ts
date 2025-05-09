@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import express from 'express';
 import type { Request, Response } from 'express';
 
+import type { UserDTO } from './types/user';
 import { ValidationError, validadeBody } from './utils';
 
 const SALT_ROUNDS = 10;
@@ -18,10 +19,10 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, World!');
 });
 
-app.post('/users', async (req: Request<User>, res: Response) => {
+app.post('/users', async (req: Request, res: Response) => {
   try {
-    await validadeBody(req.body);
-    const userInput = req.body;
+    const userInput = req.body as UserDTO;
+    await validadeBody(userInput);
 
     const hashedPassword = await bcrypt.hash(userInput.password, SALT_ROUNDS);
 
