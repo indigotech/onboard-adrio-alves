@@ -1,5 +1,4 @@
 {
   "require": "tsx",
-  "extensions": ["ts"],
-  "spec": "test/index.ts"
+  "extensions": ["ts"]
 }

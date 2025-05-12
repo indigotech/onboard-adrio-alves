@@ -1,7 +1,5 @@
-import { PrismaClient, type User } from '@prisma/client';
 import type { UserDTO } from './types/user';
-
-const prisma = new PrismaClient();
+import { prisma } from './db';
 
 export class ValidationError extends Error {
   constructor(message: string) {

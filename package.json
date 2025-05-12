@@ -11,7 +11,7 @@
     "format": "biome format .",
     "db:migrate": "prisma migrate dev",
     "db:codegen": "prisma generate",
-    "test": "mocha"
+    "test": "mocha test/index.ts"
   },
   "keywords": [],
   "author": "",

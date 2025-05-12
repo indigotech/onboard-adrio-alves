@@ -44,10 +44,10 @@ app.post('/users', async (req: Request, res: Response) => {
   }
 });
 
-function setupServer() {
-  const PORT = process.env.PORT || 3000;
-  return app.listen(PORT, () => {
-    console.log(`API is running at http://localhost:${PORT}`);
+function setupServer(port: number) {
+  //todo: usar await -> fazer a funcao virar promisse
+  return app.listen(port, () => {
+    console.log(`API is running at http://localhost:${port}`);
   });
 }
 
