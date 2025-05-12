@@ -17,10 +17,12 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "6.7.0",
+    "bcrypt": "5.1.1",
     "express": "5.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@types/bcrypt": "5.0.2",
     "@types/express": "5.0.1",
     "@types/node": "20.0.0",
     "concurrently": "9.1.2",
