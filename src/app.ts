@@ -5,7 +5,6 @@ import type { UserDTO } from './types/user';
 import bcrypt from 'bcrypt';
 import { prisma } from './db';
 
-const PORT = process.env.PORT || 3000;
 const SALT_ROUNDS = 10;
 
 const app = express();
@@ -46,6 +45,7 @@ app.post('/users', async (req: Request, res: Response) => {
 });
 
 function setupServer() {
+  const PORT = process.env.PORT || 3000;
   return app.listen(PORT, () => {
     console.log(`API is running at http://localhost:${PORT}`);
   });
