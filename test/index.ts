@@ -4,10 +4,10 @@ import dotenv from 'dotenv';
 import { before } from 'mocha';
 import type { Server } from 'node:http';
 
+dotenv.config({ path: '.env.test' });
+
 import './hello-world';
 import './user';
-
-dotenv.config({ path: '.env.test' });
 
 let server: Server;
 
