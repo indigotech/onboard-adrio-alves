@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 
-import { setupServer } from '../src/app';
-import { before } from 'mocha';
 import type { Server } from 'node:http';
+import { before } from 'mocha';
+import { setupServer } from '../src/app';
 
 import './hello-world';
 import './user';

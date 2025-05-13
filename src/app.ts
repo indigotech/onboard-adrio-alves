@@ -1,9 +1,9 @@
+import bcrypt from 'bcrypt';
 import express from 'express';
 import type { Request, Response } from 'express';
-import { ValidationError, validadeBody } from './utils';
-import type { UserDTO } from './types/user';
-import bcrypt from 'bcrypt';
 import { prisma } from './db';
+import type { UserDTO } from './types/user';
+import { ValidationError, validadeBody } from './utils';
 
 const SALT_ROUNDS = 10;
 

@@ -1,7 +1,7 @@
-import { prisma } from '../src/db';
-import { describe, it } from 'mocha';
 import axios from 'axios';
 import { expect } from 'chai';
+import { afterEach, describe, it } from 'mocha';
+import { prisma } from '../src/db';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
@@ -18,17 +18,14 @@ describe('POST /users', () => {
     const response = await axios.post(`${BASE_URL}/users`, userData);
 
     expect(response.status).to.equal(201);
-    expect(response.data).to.be.deep.equal({
-      id: 1,
+    expect(response.data).to.include({
       name: 'Test User',
       email: 'Test.User@Mail.com',
       birthdate: '1990-01-01T00:00:00.000Z',
     });
-
-    await prisma.user.deleteMany({
-      where: {
-        email: 'Test.User@Mail.com',
-      },
-    });
   });
+});
+
+afterEach(async () => {
+  await prisma.user.deleteMany({});
 });

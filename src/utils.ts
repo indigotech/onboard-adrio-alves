@@ -1,5 +1,5 @@
-import type { UserDTO } from './types/user';
 import { prisma } from './db';
+import type { UserDTO } from './types/user';
 
 export class ValidationError extends Error {
   constructor(message: string) {
