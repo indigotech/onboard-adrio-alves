@@ -25,7 +25,3 @@ describe('POST /users', () => {
     });
   });
 });
-
-afterEach(async () => {
-  await prisma.user.deleteMany({});
-});

@@ -6,6 +6,7 @@ import type { UserDTO } from './types/user';
 import { ValidationError, validadeBody } from './utils';
 
 const SALT_ROUNDS = 10;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 
@@ -44,10 +45,10 @@ app.post('/users', async (req: Request, res: Response) => {
   }
 });
 
-function setupServer(port: number) {
+function setupServer() {
   //todo: usar await -> fazer a funcao virar promisse
-  return app.listen(port, () => {
-    console.log(`API is running at http://localhost:${port}`);
+  return app.listen(PORT, () => {
+    console.log(`API is running at http://localhost:${PORT}`);
   });
 }
 
