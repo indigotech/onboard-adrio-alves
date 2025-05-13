@@ -1,6 +1,4 @@
 import dotenv from 'dotenv';
-console.log(process.env.PORT);
-console.log(process.env.DATABASE_URL);
 
 import { setupServer } from '../src/app';
 import { before } from 'mocha';
@@ -13,7 +11,6 @@ import { setupDatabase } from '../src/db';
 let server: Server;
 
 before(async () => {
-  console.log(`${process.cwd()}/test.env`);
   dotenv.config({ path: `${process.cwd()}/test.env` });
   await setupDatabase();
   server = setupServer(+(process.env.PORT || 3001));

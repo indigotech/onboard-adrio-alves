@@ -11,7 +11,7 @@
     "format": "biome format .",
     "db:migrate": "prisma migrate dev",
     "db:codegen": "prisma generate",
-    "test": "mocha test/index.ts"
+    "test": "DOTENV_CONFIG_PATH=./test.env mocha -r tsx -r dotenv/config test/index.ts"
   },
   "keywords": [],
   "author": "",
