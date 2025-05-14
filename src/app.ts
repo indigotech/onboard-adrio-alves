@@ -5,9 +5,10 @@ import { prisma } from './db';
 import { errorHandler } from './middlewares/error-handler';
 import type { UserDTO } from './types/user';
 import { validateBody } from './utils/validation';
+import { listenAsync } from './utils/listen-async';
 
 const SALT_ROUNDS = 10;
-const PORT = process.env.PORT || 3000;
+const PORT = +(process.env.PORT || 3000);
 
 const app = express();
 
@@ -39,11 +40,10 @@ app.post('/users', async (req: Request, res: Response, next: NextFunction) => {
 
 app.use(errorHandler);
 
-function setupServer() {
-  //todo: usar await -> fazer a funcao virar promisse
-  return app.listen(PORT, () => {
-    console.log(`API is running at http://localhost:${PORT}`);
-  });
+async function setupServer() {
+  await listenAsync(app, PORT);
+
+  console.log(`API is running at http://localhost:${PORT}`);
 }
 
 export { app, setupServer };

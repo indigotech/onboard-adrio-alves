@@ -5,8 +5,8 @@ import { setupDatabase } from './db';
 dotenv.config({ path: `${process.env.NODE_ENV || 'development'}.env` });
 
 async function main() {
-  setupDatabase();
-  setupServer();
+  await setupDatabase();
+  await setupServer();
 }
 
 main();
