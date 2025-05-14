@@ -2,9 +2,9 @@ import bcrypt from 'bcrypt';
 import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import { prisma } from './db';
+import { errorHandler } from './middlewares/error-handler';
 import type { UserDTO } from './types/user';
 import { validateBody } from './utils/validation';
-import { errorHandler } from './middlewares/error-handler';
 
 const SALT_ROUNDS = 10;
 const PORT = process.env.PORT || 3000;

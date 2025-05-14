@@ -9,6 +9,6 @@ export class ValidationError extends Error {
     this.code = code;
     this.name = 'ValidationError';
     this.details = details;
-    Object.setPrototypeOf(this, ValidationError.prototype)
+    Object.setPrototypeOf(this, ValidationError.prototype);
   }
 }
