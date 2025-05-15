@@ -127,11 +127,11 @@ describe('POST /users', () => {
       },
     });
     const response = await axios.post(`${BASE_URL}/users`, user, {
-      validateStatus: (status) => status === 400,
+      validateStatus: (status) => status === 409,
     });
-    expect(response.status).to.equal(400);
+    expect(response.status).to.equal(409);
     expect(response.data).to.include({
-      error: 'ValidationError',
+      error: 'ConflictError',
       code: 'USR_05',
     });
     expect(response.data.details).to.equal('Email already exists.');

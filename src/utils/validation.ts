@@ -1,5 +1,5 @@
 import { prisma } from '../db';
-import { ValidationError } from '../types/errors';
+import { ConflictError, ValidationError } from '../types/errors';
 import type { UserDTO } from '../types/user';
 
 export async function validateBody(body: unknown) {
@@ -27,6 +27,6 @@ export async function validateBody(body: unknown) {
 
   const existingUser = await prisma.user.findUnique({ where: { email: input.email } });
   if (existingUser) {
-    throw new ValidationError('Email already exists.', 'USR_05');
+    throw new ConflictError('Email already exists.', 'USR_05');
   }
 }
