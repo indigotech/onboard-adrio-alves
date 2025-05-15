@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { ValidationError, AuthError } from '../types/errors';
+import { AuthError, ValidationError } from '../types/errors';
 
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
   console.error(err);

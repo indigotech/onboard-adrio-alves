@@ -1,12 +1,11 @@
+import bcrypt from 'bcrypt';
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { prisma } from '../db';
-import bcrypt from 'bcrypt';
 import type { AuthDTO } from '../types/auth';
 import { AuthError, ValidationError } from '../types/errors';
 import { generateToken } from '../utils/jwt';
 
-const TOKEN = 'the_token';
 const authRouter = Router();
 
 authRouter.post('/', async (req: Request, res: Response) => {
