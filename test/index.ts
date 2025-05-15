@@ -9,7 +9,7 @@ let server: Server;
 before(async () => {
   dotenv.config({ path: `${process.cwd()}/test.env` });
   await setupDatabase();
-  server = setupServer();
+  server = await setupServer();
 });
 
 import './hello-world';
