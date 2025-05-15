@@ -1,6 +1,6 @@
-import dotenv from 'dotenv';
 import { PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
 
 dotenv.config({ path: `${process.env.NODE_ENV || 'development'}.env` });
 const prisma = new PrismaClient();
@@ -14,8 +14,8 @@ async function main() {
       name: `User ${i + 1}`,
       email: `user${i + 1}@example.com`,
       password: await bcrypt.hash('password123', SALT_ROUNDS),
-      birthdate: new Date(1990 + ((i + 1) % 30), ((i + 1) % 12), ((i + 1) % 28) + 1),
-    }))
+      birthdate: new Date(1990 + ((i + 1) % 30), (i + 1) % 12, ((i + 1) % 28) + 1),
+    })),
   );
 
   // Bulk insert, skip duplicates on any unique constraint
