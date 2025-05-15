@@ -114,8 +114,9 @@ describe('POST /auth', () => {
     const decoded = jwt.decode(data.token) as jwt.JwtPayload;
 
     expect(decoded).haveOwnProperty('exp');
+    if (!decoded.exp) throw new Error('Token expiration not found');
 
-    const expiresInSeconds = decoded.exp! - Math.floor(Date.now() / 1000);
+    const expiresInSeconds = decoded.exp - Math.floor(Date.now() / 1000);
     const sevenDaysInSeconds = 7 * 24 * 60 * 60;
 
     // Allow a 10-second margin due to processing delays

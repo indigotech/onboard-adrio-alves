@@ -2,10 +2,10 @@ import bcrypt from 'bcrypt';
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { prisma } from '../db';
-import type { UserDTO } from '../types/user';
-import { validateBody } from '../utils/validation';
 import { authenticateJWT } from '../middlewares/auth-middleware';
 import { NotFoundError, ValidationError } from '../types/errors';
+import type { UserDTO } from '../types/user';
+import { validateBody } from '../utils/validation';
 
 const SALT_ROUNDS = 10;
 const userRouter = Router();
