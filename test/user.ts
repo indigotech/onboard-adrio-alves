@@ -212,3 +212,60 @@ describe('POST /users', () => {
     });
   });
 });
+
+describe('GET /users/:id', () => {
+  let userId: number;
+
+  beforeEach(async () => {
+    const user = await prisma.user.create({
+      data: {
+        name: 'Get User',
+        email: 'getuser@mail.com',
+        password: await bcrypt.hash('abc123', 10),
+        birthdate: new Date('1995-05-15'),
+      },
+    });
+    userId = user.id;
+  });
+
+  it('should return user data when authenticated', async () => {
+    const response = await axios.get(`${BASE_URL}/users/${userId}`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+    expect(response.status).to.equal(200);
+    expect(response.data).to.deep.eq({
+      id: userId,
+      name: 'Get User',
+      email: 'getuser@mail.com',
+      birthdate: new Date('1995-05-15').toISOString(),
+    });
+  });
+
+  it('should fail if user does not exist', async () => {
+    const response = await axios.get(`${BASE_URL}/users/999999`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+      validateStatus: status => status === 404,
+    });
+    expect(response.status).to.equal(404);
+    expect(response.data).to.include({ error: 'NotFoundError' });
+  });
+
+  it('should fail if Authorization header is missing', async () => {
+    const response = await axios.get(`${BASE_URL}/users/${userId}`, {
+      validateStatus: status => status === 401,
+    });
+    expect(response.status).to.equal(401);
+    expect(response.data).to.include({ error: 'AuthError' });
+    expect(response.data.code).to.equal('AUTH_MISSING_HEADER');
+  });
+
+  it('should fail if Authorization token is invalid', async () => {
+    const response = await axios.get(`${BASE_URL}/users/${userId}`, {
+      headers: { Authorization: 'Bearer invalidtoken' },
+      validateStatus: status => status === 401,
+    });
+    expect(response.status).to.equal(401);
+    expect(response.data).to.include({ error: 'AuthError' });
+    expect(response.data.code).to.equal('AUTH_INVALID_TOKEN');
+  });
+});
