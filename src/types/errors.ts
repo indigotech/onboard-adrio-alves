@@ -12,3 +12,16 @@ export class ValidationError extends Error {
     Object.setPrototypeOf(this, ValidationError.prototype);
   }
 }
+
+export class AuthError extends Error {
+  statusCode: number;
+  code: string;
+
+  constructor(message: string, code:string , statusCode = 401) {
+    super('Erro de autenticação: as credenciais fornecidas não são válidas.');
+    this.statusCode = statusCode;
+    this.code = code;
+    this.name = 'AuthError';
+    Object.setPrototypeOf(this, AuthError.prototype);
+  }
+}

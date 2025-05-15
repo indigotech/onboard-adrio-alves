@@ -1,13 +1,9 @@
-import bcrypt from 'bcrypt';
 import express from 'express';
-import type { NextFunction, Request, Response } from 'express';
-import { prisma } from './db';
+import type { Request, Response } from 'express';
 import { errorHandler } from './middlewares/error-handler';
 import { userRouter } from './routes/user';
+import { authRouter } from './routes/auth';
 import { listenAsync } from './utils/listen-async';
-import { validateBody } from './utils/validation';
-
-const SALT_ROUNDS = 10;
 const PORT = +(process.env.PORT || 3000);
 
 const app = express();
@@ -19,6 +15,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.use('/users', userRouter);
+app.use('/auth', authRouter);
 
 app.use(errorHandler);
 
