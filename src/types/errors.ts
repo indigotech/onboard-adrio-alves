@@ -31,3 +31,16 @@ export class AuthError extends AppError {
     Object.setPrototypeOf(this, AuthError.prototype);
   }
 }
+
+export class NotFoundError extends Error {
+  statusCode: number;
+  code: string;
+
+  constructor(message: string, code: string, statusCode = 404) {
+    super('Erro de não encontrado: o recurso solicitado não foi encontrado.');
+    this.statusCode = statusCode;
+    this.code = code;
+    this.name = 'NotFoundError';
+    Object.setPrototypeOf(this, NotFoundError.prototype);
+  }
+}
