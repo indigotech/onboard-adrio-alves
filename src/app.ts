@@ -4,8 +4,8 @@ import type { NextFunction, Request, Response } from 'express';
 import { prisma } from './db';
 import { errorHandler } from './middlewares/error-handler';
 import type { UserDTO } from './types/user';
-import { validateBody } from './utils/validation';
 import { listenAsync } from './utils/listen-async';
+import { validateBody } from './utils/validation';
 
 const SALT_ROUNDS = 10;
 const PORT = +(process.env.PORT || 3000);
@@ -41,9 +41,11 @@ app.post('/users', async (req: Request, res: Response, next: NextFunction) => {
 app.use(errorHandler);
 
 async function setupServer() {
-  await listenAsync(app, PORT);
+  const server = await listenAsync(app, PORT);
 
   console.log(`API is running at http://localhost:${PORT}`);
+
+  return server;
 }
 
 export { app, setupServer };
