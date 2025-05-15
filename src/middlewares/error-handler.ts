@@ -2,8 +2,6 @@ import type { NextFunction, Request, Response } from 'express';
 import { ValidationError } from '../types/errors';
 
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
-  console.error(err);
-
   if (err instanceof ValidationError) {
     res.status(err.statusCode).json({
       error: err.name,
