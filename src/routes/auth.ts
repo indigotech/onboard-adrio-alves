@@ -10,6 +10,7 @@ const authRouter = Router();
 
 authRouter.post('/', async (req: Request, res: Response) => {
   const credentialsInput = req.body as AuthDTO;
+  const rememberMe = typeof req.body.rememberMe === 'boolean' ? req.body.rememberMe : false;
 
   if (
     !credentialsInput.email ||
@@ -30,7 +31,7 @@ authRouter.post('/', async (req: Request, res: Response) => {
     throw new AuthError('Invalid credentials.', 'AUTH_02');
   }
 
-  const token = generateToken({ id: user.id });
+  const token = generateToken({ id: user.id }, rememberMe ? '7d' : undefined);
   const { password: _, ...userWithoutPassword } = user;
   res.json({ user: userWithoutPassword, token });
 });

@@ -84,4 +84,24 @@ describe('POST /auth', () => {
       expect(error.response.data.code).to.equal('AUTH_VALIDATION');
     }
   });
+
+  it('should authenticate with rememberMe and return a token with 1 week expiration', async () => {
+    const { status, data } = await axios.post(`${BASE_URL}/auth`, {
+      email: userData.email,
+      password: userData.password,
+      rememberMe: true,
+    });
+
+    expect(status).to.equal(200);
+
+    const decoded = jwt.decode(data.token) as jwt.JwtPayload;
+
+    expect(decoded).haveOwnProperty('exp');
+
+    const expiresInSeconds = decoded.exp! - Math.floor(Date.now() / 1000);
+    const sevenDaysInSeconds = 7 * 24 * 60 * 60;
+
+    // Allow a 10-second margin due to processing delays
+    expect(Math.abs(expiresInSeconds - sevenDaysInSeconds)).lt(10);
+  });
 });
