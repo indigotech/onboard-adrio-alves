@@ -3,7 +3,7 @@ import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import { prisma } from './db';
 import { errorHandler } from './middlewares/error-handler';
-import type { UserDTO } from './types/user';
+import { userRouter } from './routes/user';
 import { listenAsync } from './utils/listen-async';
 import { validateBody } from './utils/validation';
 
@@ -18,25 +18,7 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, World!');
 });
 
-app.post('/users', async (req: Request, res: Response, next: NextFunction) => {
-  const userInput = req.body as UserDTO;
-  await validateBody(userInput);
-
-  const hashedPassword = await bcrypt.hash(userInput.password, SALT_ROUNDS);
-
-  const savedUser = await prisma.user.create({
-    data: {
-      name: userInput.name,
-      email: userInput.email,
-      password: hashedPassword,
-      birthdate: userInput.birthdate ? new Date(userInput.birthdate) : undefined,
-    },
-  });
-
-  // Do not return the password in the response
-  const { password: _, ...userWithoutPassword } = savedUser;
-  res.status(201).json(userWithoutPassword);
-});
+app.use('/users', userRouter);
 
 app.use(errorHandler);
 
