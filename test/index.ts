@@ -14,6 +14,7 @@ before(async () => {
 
 import './hello-world';
 import './user';
+import './auth';
 
 afterEach(async () => {
   await prisma.user.deleteMany({});

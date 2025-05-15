@@ -1,8 +1,8 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import { errorHandler } from './middlewares/error-handler';
-import { userRouter } from './routes/user';
 import { authRouter } from './routes/auth';
+import { userRouter } from './routes/user';
 import { listenAsync } from './utils/listen-async';
 const PORT = +(process.env.PORT || 3000);
 
