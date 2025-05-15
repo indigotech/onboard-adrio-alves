@@ -1,14 +1,24 @@
 import axios from 'axios';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import { describe, it, beforeEach } from 'mocha';
 import { prisma } from '../src/db';
+import { generateToken } from '../src/utils/jwt';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
 
+// let jwtToken: string;
+
+// beforeEach(async () => {
+//   jwtToken = generateToken({ id: 0 });
+// });
+
+const jwtToken = generateToken({ id: 0 });
+
 describe('POST /users', () => {
-  it('should create a new user', async () => {
+  it('should create a new user when authenticated', async () => {
     const userData = {
       name: 'Test User',
       email: 'Test.User@Mail.com',
@@ -17,13 +27,17 @@ describe('POST /users', () => {
     };
     const { password: plainPassword, ...userDataWithoutPassword } = userData;
 
-    const response = await axios.post(`${BASE_URL}/users`, userData);
+    const response = await axios.post(`${BASE_URL}/users`, userData, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
 
     const createdUser = await prisma.user.findUnique({
       where: { email: userData.email },
     });
+
     expect(createdUser).to.not.be.null;
-    const { id, password, ...userColumns } = createdUser!;
+    if (!createdUser) throw new Error('User was not created');
+    const { id, password, ...userColumns } = createdUser;
     expect(id).to.be.gt(0);
     expect(userColumns).to.deep.equal({
       ...userDataWithoutPassword,
@@ -39,16 +53,98 @@ describe('POST /users', () => {
     });
   });
 
-  it('should fail if body is missing', async () => {
-    const response = await axios.post(`${BASE_URL}/users`, undefined, {
-      validateStatus: (status) => status === 400,
+  it('should fail if Authorization header is missing', async () => {
+    const userData = {
+      name: 'No Auth',
+      email: 'noauth@mail.com',
+      password: 'password123',
+    };
+    try {
+      await axios.post(`${BASE_URL}/users`, userData);
+    } catch (error) {
+      expect(error.response.status).to.equal(401);
+      expect(error.response.data).to.include({ error: 'AuthError' });
+      expect(error.response.data.code).to.equal('AUTH_MISSING_HEADER');
+    }
+  });
+
+  it('should fail if Authorization header is not Bearer', async () => {
+    const userData = {
+      name: 'Bad Auth',
+      email: 'badauth@mail.com',
+      password: 'password123',
+    };
+    try {
+      await axios.post(`${BASE_URL}/users`, userData, {
+        headers: { Authorization: `Token ${jwtToken}` },
+      });
+    } catch (error) {
+      expect(error.response.status).to.equal(401);
+      expect(error.response.data).to.include({ error: 'AuthError' });
+      expect(error.response.data.code).to.equal('AUTH_INVALID_FORMAT');
+    }
+  });
+
+  it('should fail if Authorization token is invalid', async () => {
+    const userData = {
+      name: 'Invalid Token',
+      email: 'invalidtoken@mail.com',
+      password: 'password123',
+    };
+
+    const fakeToken = jwt.sign({ id: 0 }, 'wrong_secret', { expiresIn: '1h' });
+    try {
+      await axios.post(`${BASE_URL}/users`, userData, {
+        headers: { Authorization: `Bearer ${fakeToken}` },
+      });
+    } catch (error) {
+      expect(error.response.status).to.equal(401);
+      expect(error.response.data).to.include({ error: 'AuthError' });
+      expect(error.response.data.code).to.equal('AUTH_INVALID_TOKEN');
+    }
+  });
+
+  describe('Validation', () => {
+    it('should fail if body is missing', async () => {
+      try {
+        await axios.post(`${BASE_URL}/users`, undefined, {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+        });
+      } catch (error) {
+        expect(error.response.status).to.equal(400);
+        expect(error.response.data).to.include({
+          error: 'ValidationError',
+          code: 'USR_01',
+        });
+        expect(error.response.data.message).to.be.a('string');
+        expect(error.response.data.details).to.equal('Request body is required.');
+      }
     });
-    expect(response.status).to.equal(400);
-    expect(response.data).to.deep.equal({
-      error: 'ValidationError',
-      code: 'USR_01',
-      message: 'Erro na validação: algum campo da requisição não é válido.',
-      details: 'Request body is required.',
+
+    it('should fail if required fields are missing', async () => {
+      const invalidBodies = [
+        {},
+        { name: 'Test' },
+        { email: 'test@mail.com' },
+        { password: 'abc123' },
+        { name: 'Test', email: 'test@mail.com' },
+        { name: 'Test', password: 'abc123' },
+        { email: 'test@mail.com', password: 'abc123' },
+      ];
+      for (const body of invalidBodies) {
+        try {
+          await axios.post(`${BASE_URL}/users`, body, {
+            headers: { Authorization: `Bearer ${jwtToken}` },
+          });
+        } catch (error) {
+          expect(error.response.status).to.equal(400);
+          expect(error.response.data).to.include({
+            error: 'ValidationError',
+            code: 'USR_02',
+          });
+          expect(error.response.data.details).to.equal('Email, name, and password are required.');
+        }
+      }
     });
   });
 
