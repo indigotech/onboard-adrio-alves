@@ -25,3 +25,9 @@ export class ConflictError extends AppError {
     Object.setPrototypeOf(this, ConflictError.prototype);
   }
 }
+export class AuthError extends AppError {
+  constructor(details: string, code:string , statusCode = 401) {
+    super('AuthError', 'Erro de autenticação: as credenciais fornecidas não são válidas.', statusCode, code, details);
+    Object.setPrototypeOf(this, AuthError.prototype);
+  }
+}
