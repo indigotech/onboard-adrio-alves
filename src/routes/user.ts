@@ -33,8 +33,6 @@ userRouter.post('/', authenticateJWT, async (req: Request, res: Response) => {
 userRouter.get('/:id', authenticateJWT, async (req: Request, res: Response) => {
   const userId = Number(req.params.id);
 
-  console.log('User ID:', userId);
-
   if (Number.isNaN(userId)) {
     throw new ValidationError('Invalid user ID', 'USER_VALIDATION');
   }
@@ -42,10 +40,7 @@ userRouter.get('/:id', authenticateJWT, async (req: Request, res: Response) => {
     where: { id: userId },
   });
 
-  console.log('User:', user);
-
   if (!user) {
-    console.log('User not found');
     throw new NotFoundError('User not found', 'USER_NOT_FOUND');
   }
 
