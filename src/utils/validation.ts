@@ -1,14 +1,15 @@
 import { prisma } from '../db';
 import { ConflictError, ValidationError } from '../types/errors';
-import type { UserDTO } from '../types/user';
+import { isValidUserInput } from '../types/user';
 
-export async function validateBody(body: unknown) {
+export async function validateBody(body: any) {
   if (!body || typeof body !== 'object') {
     throw new ValidationError('Request body is required.', 'USR_01');
   }
-  const input = body as UserDTO;
 
-  if (!input.email || !input.name || !input.password) {
+  const input = body;
+
+  if (!isValidUserInput(input)) {
     throw new ValidationError('Email, name, and password are required.', 'USR_02');
   }
 

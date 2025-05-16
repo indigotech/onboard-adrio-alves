@@ -44,12 +44,12 @@ describe('POST /users', () => {
       validateStatus: (status) => status === 400,
     });
     expect(response.status).to.equal(400);
-    expect(response.data).to.include({
+    expect(response.data).to.deep.equal({
       error: 'ValidationError',
       code: 'USR_01',
+      message: 'Erro na validação: algum campo da requisição não é válido.',
+      details: 'Request body is required.',
     });
-    expect(response.data.message).to.be.a('string');
-    expect(response.data.details).to.equal('Request body is required.');
   });
 
   it('should fail if required fields are missing', async () => {
@@ -67,11 +67,12 @@ describe('POST /users', () => {
         validateStatus: (status) => status === 400,
       });
       expect(response.status).to.equal(400);
-      expect(response.data).to.include({
+      expect(response.data).to.deep.equal({
         error: 'ValidationError',
         code: 'USR_02',
+        message: 'Erro na validação: algum campo da requisição não é válido.',
+        details: 'Email, name, and password are required.',
       });
-      expect(response.data.details).to.equal('Email, name, and password are required.');
     }
   });
 
@@ -86,13 +87,12 @@ describe('POST /users', () => {
         validateStatus: (status) => status === 400,
       });
       expect(response.status).to.equal(400);
-      expect(response.data).to.include({
+      expect(response.data).to.deep.equal({
         error: 'ValidationError',
         code: 'USR_03',
+        message: 'Erro na validação: algum campo da requisição não é válido.',
+        details: 'Password must be at least 6 characters long and contain at least one letter and one digit.',
       });
-      expect(response.data.details).to.equal(
-        'Password must be at least 6 characters long and contain at least one letter and one digit.',
-      );
     }
   });
 
@@ -106,11 +106,12 @@ describe('POST /users', () => {
       validateStatus: (status) => status === 400,
     });
     expect(response.status).to.equal(400);
-    expect(response.data).to.include({
+    expect(response.data).to.deep.equal({
       error: 'ValidationError',
       code: 'USR_04',
+      message: 'Erro na validação: algum campo da requisição não é válido.',
+      details: 'Invalid birthdate format. Use YYYY-MM-DD.',
     });
-    expect(response.data.details).to.equal('Invalid birthdate format. Use YYYY-MM-DD.');
   });
 
   it('should fail if email already exists', async () => {
@@ -130,10 +131,11 @@ describe('POST /users', () => {
       validateStatus: (status) => status === 409,
     });
     expect(response.status).to.equal(409);
-    expect(response.data).to.include({
+    expect(response.data).to.deep.equal({
       error: 'ConflictError',
       code: 'USR_05',
+      message: 'Erro de conflito: já existe um recurso com os mesmos dados.',
+      details: 'Email already exists.',
     });
-    expect(response.data.details).to.equal('Email already exists.');
   });
 });
