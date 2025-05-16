@@ -13,4 +13,21 @@ model User {
   email     String    @unique @db.VarChar
   password  String    @db.VarChar
   birthdate DateTime? @db.Timestamp(6)
+
+  addresses Address[]
+}
+
+model Address {
+  id           Int     @id @default(autoincrement())
+  cep          String  @db.VarChar
+  street       String  @db.VarChar
+  streetNumber String  @db.VarChar
+  complement   String? @db.VarChar
+  neighborhood String  @db.VarChar
+  city         String  @db.VarChar
+  state        String  @db.VarChar
+  userId       Int
+  user         User    @relation(fields: [userId], references: [id])
+
+  @@map("user_address")
 }
