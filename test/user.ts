@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { beforeEach, describe, it } from 'mocha';
 import { prisma } from '../src/db';
 import { generateToken } from '../src/utils/jwt';
+import type { User } from '@prisma/client';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
@@ -281,45 +282,90 @@ describe('GET /users/:id', () => {
 });
 
 describe('GET /users', () => {
-  let userIds: number[] = [];
+  let userObjs: Array<{ id: number; name: string; email: string; birthdate: string | null }> = [];
   beforeEach(async () => {
-    await prisma.user.deleteMany({});
-    const users = await prisma.user.createMany({
+    await prisma.user.createMany({
       data: [
-        { name: 'Charlie', email: 'charlie@mail.com', password: await bcrypt.hash('abc123', 10), birthdate: new Date('1990-01-03') },
-        { name: 'Alice', email: 'alice@mail.com', password: await bcrypt.hash('abc123', 10), birthdate: new Date('1990-01-01') },
-        { name: 'Bob', email: 'bob@mail.com', password: await bcrypt.hash('abc123', 10), birthdate: new Date('1990-01-02') },
+        {
+          name: 'Charlie',
+          email: 'charlie@mail.com',
+          password: await bcrypt.hash('abc123', 10),
+          birthdate: new Date('1990-01-03'),
+        },
+        {
+          name: 'Alice',
+          email: 'alice@mail.com',
+          password: await bcrypt.hash('abc123', 10),
+          birthdate: new Date('1990-01-01'),
+        },
+        {
+          name: 'Bob',
+          email: 'bob@mail.com',
+          password: await bcrypt.hash('abc123', 10),
+          birthdate: new Date('1990-01-02'),
+        },
       ],
     });
     const allUsers = await prisma.user.findMany({ orderBy: { name: 'asc' } });
-    userIds = allUsers.map(u => u.id);
+    userObjs = allUsers.map(u => {
+      const { password, ...userWithoutPassword } = u;
+      return {
+        ...userWithoutPassword,
+        birthdate: u.birthdate ? u.birthdate.toISOString() : null,
+      };
+    });
   });
 
-  it('should return users ordered alphabetically by name (default limit)', async () => {
+  it('should return paginated users with metadata (default limit/skip)', async () => {
     const response = await axios.get(`${BASE_URL}/users`, {
       headers: { Authorization: `Bearer ${jwtToken}` },
     });
     expect(response.status).to.equal(200);
-    expect(response.data).to.deep.eq([
-      { id: userIds[0], name: 'Alice', email: 'alice@mail.com', birthdate: new Date('1990-01-01').toISOString() },
-      { id: userIds[1], name: 'Bob', email: 'bob@mail.com', birthdate: new Date('1990-01-02').toISOString() },
-      { id: userIds[2], name: 'Charlie', email: 'charlie@mail.com', birthdate: new Date('1990-01-03').toISOString() },
-    ]);
+    expect(response.data).to.deep.eq({
+      data: userObjs,
+      total: 3,
+      hasPrevious: false,
+      hasNext: false,
+    });
   });
 
-  it('should return only the number of users specified by limit', async () => {
+  it('should return only the number of users specified by limit and correct metadata', async () => {
     const response = await axios.get(`${BASE_URL}/users?limit=2`, {
       headers: { Authorization: `Bearer ${jwtToken}` },
     });
     expect(response.status).to.equal(200);
-    expect(response.data).to.deep.eq([
-      { id: userIds[0], name: 'Alice', email: 'alice@mail.com', birthdate: new Date('1990-01-01').toISOString() },
-      { id: userIds[1], name: 'Bob', email: 'bob@mail.com', birthdate: new Date('1990-01-02').toISOString() },
-    ]);
+    expect(response.data).to.deep.eq({
+      data: [userObjs[0], userObjs[1]],
+      total: 3,
+      hasPrevious: false,
+      hasNext: true,
+    });
+  });
+
+  it('should return the next page of users with skip and correct metadata', async () => {
+    const response = await axios.get(`${BASE_URL}/users?limit=2&skip=2`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+    expect(response.status).to.equal(200);
+    expect(response.data).to.deep.eq({
+      data: [userObjs[2]],
+      total: 3,
+      hasPrevious: true,
+      hasNext: false,
+    });
   });
 
   it('should return 400 for invalid limit parameter', async () => {
     const response = await axios.get(`${BASE_URL}/users?limit=notanumber`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+      validateStatus: status => status === 400,
+    });
+    expect(response.data).to.include({ error: 'ValidationError' });
+    expect(response.data.code).to.equal('USER_VALIDATION');
+  });
+
+  it('should return 400 for invalid skip parameter', async () => {
+    const response = await axios.get(`${BASE_URL}/users?skip=-1`, {
       headers: { Authorization: `Bearer ${jwtToken}` },
       validateStatus: status => status === 400,
     });
