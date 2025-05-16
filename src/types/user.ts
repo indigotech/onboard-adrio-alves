@@ -17,7 +17,7 @@ export function isValidUserInput(input: any): input is UserDTO {
     (typeof input.birthdate === 'undefined' || typeof input.birthdate === 'string');
 
   if (!isValid) {
-    throw new ValidationError('Invalid user input', 'USER_VALIDATION');
+    return false;
   }
 
   return true;

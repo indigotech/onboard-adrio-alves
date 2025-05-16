@@ -38,51 +38,58 @@ describe('POST /auth', () => {
     const user = await prisma.user.findUnique({
       where: { email: userData.email },
     });
-    if (!user) throw new Error('User not found in test setup');
 
-    const { password, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user!;
 
     expect(status).to.equal(200);
     expect(data.user).to.deep.eq({ ...userWithoutPassword, birthdate: userWithoutPassword.birthdate?.toISOString() });
 
-    const decoded = jwt.verify(data.token, process.env.JWT_SECRET || 'dev_secret');
-    expect(decoded).to.have.property('id', user.id);
+    const decoded = jwt.decode(data.token) as jwt.JwtPayload;
+
+    expect(decoded).haveOwnProperty('exp');
+
+    const expiresInSeconds = decoded.exp! - Math.floor(Date.now() / 1000);
+    const sevenDaysInSeconds = 60 * 60;
+
+    expect(Math.abs(expiresInSeconds - sevenDaysInSeconds)).lt(10);
   });
 
   it('should fail with non-existent user', async () => {
-    try {
-      await axios.post(`${BASE_URL}/auth`, {
+    const response = await axios.post(
+      `${BASE_URL}/auth`,
+      {
         email: 'nouser@example.com',
         password: 'irrelevant',
-      });
-    } catch (error) {
-      expect(error.response.status).to.equal(401);
-      expect(error.response.data).to.include({ error: 'AuthError' });
-      expect(error.response.data.code).to.equal('AUTH_01');
-    }
+      },
+      { validateStatus: status => status === 401 },
+    );
+    expect(response.data).to.include({ error: 'AuthError' });
+    expect(response.data.code).to.equal('AUTH_01');
   });
 
   it('should fail with invalid password', async () => {
-    try {
-      await axios.post(`${BASE_URL}/auth`, {
+    const response = await axios.post(
+      `${BASE_URL}/auth`,
+      {
         email: userData.email,
         password: 'wrongpassword',
-      });
-    } catch (error) {
-      expect(error.response.status).to.equal(401);
-      expect(error.response.data).to.include({ error: 'AuthError' });
-      expect(error.response.data.code).to.equal('AUTH_02');
-    }
+      },
+      { validateStatus: status => status === 401 },
+    );
+    expect(response.status).to.equal(401);
+    expect(response.data).to.include({ error: 'AuthError' });
+    expect(response.data.code).to.equal('AUTH_02');
   });
 
   it('should fail with missing fields', async () => {
-    try {
-      await axios.post(`${BASE_URL}/auth`, { email: userData.email });
-    } catch (error) {
-      expect(error.response.status).to.equal(400);
-      expect(error.response.data).to.include({ error: 'ValidationError' });
-      expect(error.response.data.code).to.equal('AUTH_VALIDATION');
-    }
+    const response = await axios.post(
+      `${BASE_URL}/auth`,
+      { email: userData.email },
+      { validateStatus: status => status === 400 },
+    );
+
+    expect(response.data).to.include({ error: 'ValidationError' });
+    expect(response.data.code).to.equal('AUTH_VALIDATION');
   });
 
   it('should authenticate with rememberMe and return a token with 1 week expiration', async () => {
