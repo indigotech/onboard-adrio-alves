@@ -4,13 +4,13 @@ import type { Request, Response } from 'express';
 import { prisma } from '../db';
 import type { UserDTO } from '../types/user';
 import { validateBody } from '../utils/validation';
+import { authenticateJWT } from '../middlewares/auth-middleware';
 
 const SALT_ROUNDS = 10;
 const userRouter = Router();
 
-userRouter.post('/', async (req: Request, res: Response) => {
+userRouter.post('/', authenticateJWT, async (req: Request, res: Response) => {
   await validateBody(req.body);
-
   const userInput = req.body as UserDTO;
 
   const hashedPassword = await bcrypt.hash(userInput.password, SALT_ROUNDS);

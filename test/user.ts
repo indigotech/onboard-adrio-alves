@@ -1,14 +1,18 @@
 import axios from 'axios';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 import { prisma } from '../src/db';
+import { generateToken } from '../src/utils/jwt';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
 
+const jwtToken = generateToken({ id: 0 });
+
 describe('POST /users', () => {
-  it('should create a new user', async () => {
+  it('should create a new user when authenticated', async () => {
     const userData = {
       name: 'Test User',
       email: 'Test.User@Mail.com',
@@ -17,13 +21,17 @@ describe('POST /users', () => {
     };
     const { password: plainPassword, ...userDataWithoutPassword } = userData;
 
-    const response = await axios.post(`${BASE_URL}/users`, userData);
+    const response = await axios.post(`${BASE_URL}/users`, userData, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
 
     const createdUser = await prisma.user.findUnique({
       where: { email: userData.email },
     });
+
     expect(createdUser).to.not.be.null;
-    const { id, password, ...userColumns } = createdUser!;
+    if (!createdUser) throw new Error('User was not created');
+    const { id, password, ...userColumns } = createdUser;
     expect(id).to.be.gt(0);
     expect(userColumns).to.deep.equal({
       ...userDataWithoutPassword,
@@ -39,54 +47,115 @@ describe('POST /users', () => {
     });
   });
 
-  it('should fail if body is missing', async () => {
-    const response = await axios.post(`${BASE_URL}/users`, undefined, {
-      validateStatus: (status) => status === 400,
+  it('should fail if Authorization header is missing', async () => {
+    const userData = {
+      name: 'No Auth',
+      email: 'noauth@mail.com',
+      password: 'password123',
+    };
+    const response = await axios.post(`${BASE_URL}/users`, userData, {
+      validateStatus: status => status === 401,
     });
-    expect(response.status).to.equal(400);
     expect(response.data).to.deep.equal({
-      error: 'ValidationError',
-      code: 'USR_01',
-      message: 'Erro na validação: algum campo da requisição não é válido.',
-      details: 'Request body is required.',
+      error: 'AuthError',
+      details: 'Authorization header missing',
+      code: 'AUTH_MISSING_HEADER',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
     });
   });
 
-  it('should fail if required fields are missing', async () => {
-    const invalidBodies = [
-      {},
-      { name: 'Test' },
-      { email: 'test@mail.com' },
-      { password: 'abc123' },
-      { name: 'Test', email: 'test@mail.com' },
-      { name: 'Test', password: 'abc123' },
-      { email: 'test@mail.com', password: 'abc123' },
-    ];
-    for (const body of invalidBodies) {
-      const response = await axios.post(`${BASE_URL}/users`, body, {
-        validateStatus: (status) => status === 400,
+  it('should fail if Authorization header is not Bearer', async () => {
+    const userData = {
+      name: 'Bad Auth',
+      email: 'badauth@mail.com',
+      password: 'password123',
+    };
+    const response = await axios.post(`${BASE_URL}/users`, userData, {
+      headers: { Authorization: `Token ${jwtToken}` },
+      validateStatus: status => status === 401,
+    });
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      details: 'Invalid Authorization header format. Expected Bearer token.',
+      code: 'AUTH_INVALID_FORMAT',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
+  });
+
+  it('should fail if Authorization token is invalid', async () => {
+    const userData = {
+      name: 'Invalid Token',
+      email: 'invalidtoken@mail.com',
+      password: 'password123',
+    };
+
+    const fakeToken = jwt.sign({ id: 0 }, 'wrong_secret', { expiresIn: '1h' });
+    const response = await axios.post(`${BASE_URL}/users`, userData, {
+      headers: { Authorization: `Bearer ${fakeToken}` },
+      validateStatus: status => status === 401,
+    });
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      "details": "Invalid or expired token.",
+      code: 'AUTH_INVALID_TOKEN',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
+  });
+
+  describe('Validation', () => {
+    it('should fail if body is missing', async () => {
+      const response = await axios.post(`${BASE_URL}/users`, undefined, {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+        validateStatus: status => status === 400,
       });
-      expect(response.status).to.equal(400);
       expect(response.data).to.deep.equal({
         error: 'ValidationError',
-        code: 'USR_02',
+        code: 'USR_01',
         message: 'Erro na validação: algum campo da requisição não é válido.',
-        details: 'Email, name, and password are required.',
+        details: 'Request body is required.',
       });
-    }
+    });
+
+    it('should fail if required fields are missing', async () => {
+      const invalidBodies = [
+        {},
+        { name: 'Test' },
+        { email: 'test@mail.com' },
+        { password: 'abc123' },
+        { name: 'Test', email: 'test@mail.com' },
+        { name: 'Test', password: 'abc123' },
+        { email: 'test@mail.com', password: 'abc123' },
+      ];
+      for (const body of invalidBodies) {
+        const response = await axios.post(`${BASE_URL}/users`, body, {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+          validateStatus: status => status === 400,
+        });
+        expect(response.data).to.deep.equal({
+          error: 'ValidationError',
+          code: 'USR_02',
+          message: 'Erro na validação: algum campo da requisição não é válido.',
+          details: 'Email, name, and password are required.',
+        });
+      }
+    });
   });
 
   it('should fail if password is too short or lacks digits/letters', async () => {
     const invalidPasswords = ['abc', '123456', 'abcdef', 'abc12'];
     for (const password of invalidPasswords) {
-      const response = await axios.post(`${BASE_URL}/users`, {
-        name: 'Test',
-        email: `test${password}@mail.com`,
-        password,
-      }, {
-        validateStatus: (status) => status === 400,
-      });
-      expect(response.status).to.equal(400);
+      const response = await axios.post(
+        `${BASE_URL}/users`,
+        {
+          name: 'Test',
+          email: `test${password}@mail.com`,
+          password,
+        },
+        {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+          validateStatus: status => status === 400,
+        },
+      );
       expect(response.data).to.deep.equal({
         error: 'ValidationError',
         code: 'USR_03',
@@ -97,15 +166,19 @@ describe('POST /users', () => {
   });
 
   it('should fail if birthdate is invalid', async () => {
-    const response = await axios.post(`${BASE_URL}/users`, {
-      name: 'Test',
-      email: 'testbirthdate@mail.com',
-      password: 'abc123',
-      birthdate: 'not-a-date',
-    }, {
-      validateStatus: (status) => status === 400,
-    });
-    expect(response.status).to.equal(400);
+    const response = await axios.post(
+      `${BASE_URL}/users`,
+      {
+        name: 'Test',
+        email: 'testbirthdate@mail.com',
+        password: 'abc123',
+        birthdate: 'not-a-date',
+      },
+      {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+        validateStatus: status => status === 400,
+      },
+    );
     expect(response.data).to.deep.equal({
       error: 'ValidationError',
       code: 'USR_04',
@@ -128,9 +201,9 @@ describe('POST /users', () => {
       },
     });
     const response = await axios.post(`${BASE_URL}/users`, user, {
-      validateStatus: (status) => status === 409,
+      headers: { Authorization: `Bearer ${jwtToken}` },
+      validateStatus: status => status === 409,
     });
-    expect(response.status).to.equal(409);
     expect(response.data).to.deep.equal({
       error: 'ConflictError',
       code: 'USR_05',
