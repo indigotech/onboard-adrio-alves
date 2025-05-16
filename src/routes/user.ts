@@ -8,6 +8,7 @@ import type { UserDTO } from '../types/user';
 import { validateBody } from '../utils/validation';
 
 const SALT_ROUNDS = 10;
+const GET_USER_LIMIT = 20;
 const userRouter = Router();
 
 userRouter.post('/', authenticateJWT, async (req: Request, res: Response) => {
@@ -46,6 +47,21 @@ userRouter.get('/:id', authenticateJWT, async (req: Request, res: Response) => {
 
   const { password: _, ...userWithoutPassword } = user;
   res.json(userWithoutPassword);
+});
+
+userRouter.get('/', authenticateJWT, async (req: Request, res: Response) => {
+  const limit = req.query.limit ? Number.parseInt(req.query.limit as string) : GET_USER_LIMIT;
+  if (Number.isNaN(limit) || limit <= 0) {
+    throw new ValidationError('Invalid limit parameter', 'USER_VALIDATION');
+  }
+
+  const users = await prisma.user.findMany({
+    orderBy: { name: 'asc' },
+    take: limit,
+  });
+
+  const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+  res.json(usersWithoutPasswords);
 });
 
 export { userRouter };
