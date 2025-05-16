@@ -2,18 +2,12 @@ import axios from 'axios';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { expect } from 'chai';
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it } from 'mocha';
 import { prisma } from '../src/db';
 import { generateToken } from '../src/utils/jwt';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
-
-// let jwtToken: string;
-
-// beforeEach(async () => {
-//   jwtToken = generateToken({ id: 0 });
-// });
 
 const jwtToken = generateToken({ id: 0 });
 
@@ -106,19 +100,16 @@ describe('POST /users', () => {
 
   describe('Validation', () => {
     it('should fail if body is missing', async () => {
-      try {
-        await axios.post(`${BASE_URL}/users`, undefined, {
-          headers: { Authorization: `Bearer ${jwtToken}` },
-        });
-      } catch (error) {
-        expect(error.response.status).to.equal(400);
-        expect(error.response.data).to.include({
-          error: 'ValidationError',
-          code: 'USR_01',
-        });
-        expect(error.response.data.message).to.be.a('string');
-        expect(error.response.data.details).to.equal('Request body is required.');
-      }
+      const response = await axios.post(`${BASE_URL}/users`, undefined, {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+        validateStatus: status => status === 400,
+      });
+      expect(response.data).to.deep.equal({
+        error: 'ValidationError',
+        code: 'USR_01',
+        message: 'Erro na validação: algum campo da requisição não é válido.',
+        details: 'Request body is required.',
+      });
     });
 
     it('should fail if required fields are missing', async () => {
@@ -132,57 +123,35 @@ describe('POST /users', () => {
         { email: 'test@mail.com', password: 'abc123' },
       ];
       for (const body of invalidBodies) {
-        try {
-          await axios.post(`${BASE_URL}/users`, body, {
-            headers: { Authorization: `Bearer ${jwtToken}` },
-          });
-        } catch (error) {
-          expect(error.response.status).to.equal(400);
-          expect(error.response.data).to.include({
-            error: 'ValidationError',
-            code: 'USR_02',
-          });
-          expect(error.response.data.details).to.equal('Email, name, and password are required.');
-        }
+        const response = await axios.post(`${BASE_URL}/users`, body, {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+          validateStatus: status => status === 400,
+        });
+        expect(response.data).to.deep.equal({
+          error: 'ValidationError',
+          code: 'USR_02',
+          message: 'Erro na validação: algum campo da requisição não é válido.',
+          details: 'Email, name, and password are required.',
+        });
       }
     });
-  });
-
-  it('should fail if required fields are missing', async () => {
-    const invalidBodies = [
-      {},
-      { name: 'Test' },
-      { email: 'test@mail.com' },
-      { password: 'abc123' },
-      { name: 'Test', email: 'test@mail.com' },
-      { name: 'Test', password: 'abc123' },
-      { email: 'test@mail.com', password: 'abc123' },
-    ];
-    for (const body of invalidBodies) {
-      const response = await axios.post(`${BASE_URL}/users`, body, {
-        validateStatus: (status) => status === 400,
-      });
-      expect(response.status).to.equal(400);
-      expect(response.data).to.deep.equal({
-        error: 'ValidationError',
-        code: 'USR_02',
-        message: 'Erro na validação: algum campo da requisição não é válido.',
-        details: 'Email, name, and password are required.',
-      });
-    }
   });
 
   it('should fail if password is too short or lacks digits/letters', async () => {
     const invalidPasswords = ['abc', '123456', 'abcdef', 'abc12'];
     for (const password of invalidPasswords) {
-      const response = await axios.post(`${BASE_URL}/users`, {
-        name: 'Test',
-        email: `test${password}@mail.com`,
-        password,
-      }, {
-        validateStatus: (status) => status === 400,
-      });
-      expect(response.status).to.equal(400);
+      const response = await axios.post(
+        `${BASE_URL}/users`,
+        {
+          name: 'Test',
+          email: `test${password}@mail.com`,
+          password,
+        },
+        {
+          headers: { Authorization: `Bearer ${jwtToken}` },
+          validateStatus: status => status === 400,
+        },
+      );
       expect(response.data).to.deep.equal({
         error: 'ValidationError',
         code: 'USR_03',
@@ -193,15 +162,19 @@ describe('POST /users', () => {
   });
 
   it('should fail if birthdate is invalid', async () => {
-    const response = await axios.post(`${BASE_URL}/users`, {
-      name: 'Test',
-      email: 'testbirthdate@mail.com',
-      password: 'abc123',
-      birthdate: 'not-a-date',
-    }, {
-      validateStatus: (status) => status === 400,
-    });
-    expect(response.status).to.equal(400);
+    const response = await axios.post(
+      `${BASE_URL}/users`,
+      {
+        name: 'Test',
+        email: 'testbirthdate@mail.com',
+        password: 'abc123',
+        birthdate: 'not-a-date',
+      },
+      {
+        headers: { Authorization: `Bearer ${jwtToken}` },
+        validateStatus: status => status === 400,
+      },
+    );
     expect(response.data).to.deep.equal({
       error: 'ValidationError',
       code: 'USR_04',
@@ -224,9 +197,9 @@ describe('POST /users', () => {
       },
     });
     const response = await axios.post(`${BASE_URL}/users`, user, {
-      validateStatus: (status) => status === 409,
+      headers: { Authorization: `Bearer ${jwtToken}` },
+      validateStatus: status => status === 409,
     });
-    expect(response.status).to.equal(409);
     expect(response.data).to.deep.equal({
       error: 'ConflictError',
       code: 'USR_05',

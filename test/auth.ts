@@ -80,7 +80,6 @@ describe.only('POST /auth', () => {
       },
       { validateStatus: status => status === 401 },
     );
-    expect(response.status).to.equal(401);
     expect(response.data).to.deep.equal({
       error: 'AuthError',
       code: 'AUTH_02',
@@ -95,7 +94,12 @@ describe.only('POST /auth', () => {
       { email: userData.email },
       { validateStatus: status => status === 400 },
     );
-    expect(response.data).to.deep.equal({ error: 'ValidationError', code: 'AUTH_VALIDATION', details: 'Invalid credentials input', message: 'Erro na validação: algum campo da requisição não é válido.' });
+    expect(response.data).to.deep.equal({
+      error: 'ValidationError',
+      code: 'AUTH_VALIDATION',
+      details: 'Invalid credentials input',
+      message: 'Erro na validação: algum campo da requisição não é válido.',
+    });
   });
 
   it('should authenticate with rememberMe and return a token with 1 week expiration', async () => {
