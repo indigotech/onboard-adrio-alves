@@ -9,7 +9,7 @@ import { generateToken } from '../src/utils/jwt';
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
 
-describe('POST /auth', () => {
+describe.only('POST /auth', () => {
   const userData = {
     name: 'Test User',
     email: 'testuser@example.com',
@@ -63,8 +63,12 @@ describe('POST /auth', () => {
       },
       { validateStatus: status => status === 401 },
     );
-    expect(response.data).to.include({ error: 'AuthError' });
-    expect(response.data.code).to.equal('AUTH_01');
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      code: 'AUTH_01',
+      details: 'Invalid credentials. User not found',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
   });
 
   it('should fail with invalid password', async () => {
@@ -77,8 +81,12 @@ describe('POST /auth', () => {
       { validateStatus: status => status === 401 },
     );
     expect(response.status).to.equal(401);
-    expect(response.data).to.include({ error: 'AuthError' });
-    expect(response.data.code).to.equal('AUTH_02');
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      code: 'AUTH_02',
+      details: 'Invalid credentials.',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
   });
 
   it('should fail with missing fields', async () => {
@@ -87,9 +95,7 @@ describe('POST /auth', () => {
       { email: userData.email },
       { validateStatus: status => status === 400 },
     );
-
-    expect(response.data).to.include({ error: 'ValidationError' });
-    expect(response.data.code).to.equal('AUTH_VALIDATION');
+    expect(response.data).to.deep.equal({ error: 'ValidationError', code: 'AUTH_VALIDATION', details: 'Invalid credentials input', message: 'Erro na validação: algum campo da requisição não é válido.' });
   });
 
   it('should authenticate with rememberMe and return a token with 1 week expiration', async () => {
