@@ -53,13 +53,15 @@ describe('POST /users', () => {
       email: 'noauth@mail.com',
       password: 'password123',
     };
-    try {
-      await axios.post(`${BASE_URL}/users`, userData);
-    } catch (error) {
-      expect(error.response.status).to.equal(401);
-      expect(error.response.data).to.include({ error: 'AuthError' });
-      expect(error.response.data.code).to.equal('AUTH_MISSING_HEADER');
-    }
+    const response = await axios.post(`${BASE_URL}/users`, userData, {
+      validateStatus: status => status === 401,
+    });
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      details: 'Authorization header missing',
+      code: 'AUTH_MISSING_HEADER',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
   });
 
   it('should fail if Authorization header is not Bearer', async () => {
@@ -68,15 +70,16 @@ describe('POST /users', () => {
       email: 'badauth@mail.com',
       password: 'password123',
     };
-    try {
-      await axios.post(`${BASE_URL}/users`, userData, {
-        headers: { Authorization: `Token ${jwtToken}` },
-      });
-    } catch (error) {
-      expect(error.response.status).to.equal(401);
-      expect(error.response.data).to.include({ error: 'AuthError' });
-      expect(error.response.data.code).to.equal('AUTH_INVALID_FORMAT');
-    }
+    const response = await axios.post(`${BASE_URL}/users`, userData, {
+      headers: { Authorization: `Token ${jwtToken}` },
+      validateStatus: status => status === 401,
+    });
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      details: 'Invalid Authorization header format. Expected Bearer token.',
+      code: 'AUTH_INVALID_FORMAT',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
   });
 
   it('should fail if Authorization token is invalid', async () => {
@@ -87,15 +90,16 @@ describe('POST /users', () => {
     };
 
     const fakeToken = jwt.sign({ id: 0 }, 'wrong_secret', { expiresIn: '1h' });
-    try {
-      await axios.post(`${BASE_URL}/users`, userData, {
-        headers: { Authorization: `Bearer ${fakeToken}` },
-      });
-    } catch (error) {
-      expect(error.response.status).to.equal(401);
-      expect(error.response.data).to.include({ error: 'AuthError' });
-      expect(error.response.data.code).to.equal('AUTH_INVALID_TOKEN');
-    }
+    const response = await axios.post(`${BASE_URL}/users`, userData, {
+      headers: { Authorization: `Bearer ${fakeToken}` },
+      validateStatus: status => status === 401,
+    });
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      "details": "Invalid or expired token.",
+      code: 'AUTH_INVALID_TOKEN',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
   });
 
   describe('Validation', () => {

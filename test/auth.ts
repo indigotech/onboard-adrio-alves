@@ -9,7 +9,7 @@ import { generateToken } from '../src/utils/jwt';
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
 
-describe.only('POST /auth', () => {
+describe('POST /auth', () => {
   const userData = {
     name: 'Test User',
     email: 'testuser@example.com',
