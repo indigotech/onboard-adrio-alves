@@ -5,8 +5,8 @@ import { prisma } from '../db';
 import { authenticateJWT } from '../middlewares/auth-middleware';
 import { NotFoundError, ValidationError } from '../types/errors';
 import type { UserDTO } from '../types/user';
+import { buildPaginatedResponse, parsePaginationParams } from '../utils/pagination';
 import { validateBody } from '../utils/validation';
-import { parsePaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 const SALT_ROUNDS = 10;
 const userRouter = Router();

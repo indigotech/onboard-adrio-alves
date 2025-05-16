@@ -1,3 +1,4 @@
+import type { User } from '@prisma/client';
 import axios from 'axios';
 import bcrypt from 'bcrypt';
 import { expect } from 'chai';
@@ -96,7 +97,7 @@ describe('POST /users', () => {
     });
     expect(response.data).to.deep.equal({
       error: 'AuthError',
-      "details": "Invalid or expired token.",
+      details: 'Invalid or expired token.',
       code: 'AUTH_INVALID_TOKEN',
       message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
     });

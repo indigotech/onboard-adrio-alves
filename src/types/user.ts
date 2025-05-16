@@ -1,4 +1,4 @@
-import { ValidationError } from "./errors";
+import { ValidationError } from './errors';
 
 export interface UserDTO {
   name: string;
@@ -6,7 +6,6 @@ export interface UserDTO {
   password: string;
   birthdate?: string;
 }
-
 
 export function isValidUserInput(input: any): input is UserDTO {
   const isValid =
