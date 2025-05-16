@@ -279,3 +279,68 @@ describe('GET /users/:id', () => {
     });
   });
 });
+
+describe('GET /users', () => {
+  let userIds: number[] = [];
+  beforeEach(async () => {
+    await prisma.user.deleteMany({});
+    const users = await prisma.user.createMany({
+      data: [
+        { name: 'Charlie', email: 'charlie@mail.com', password: await bcrypt.hash('abc123', 10), birthdate: new Date('1990-01-03') },
+        { name: 'Alice', email: 'alice@mail.com', password: await bcrypt.hash('abc123', 10), birthdate: new Date('1990-01-01') },
+        { name: 'Bob', email: 'bob@mail.com', password: await bcrypt.hash('abc123', 10), birthdate: new Date('1990-01-02') },
+      ],
+    });
+    const allUsers = await prisma.user.findMany({ orderBy: { name: 'asc' } });
+    userIds = allUsers.map(u => u.id);
+  });
+
+  it('should return users ordered alphabetically by name (default limit)', async () => {
+    const response = await axios.get(`${BASE_URL}/users`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+    expect(response.status).to.equal(200);
+    expect(response.data).to.deep.eq([
+      { id: userIds[0], name: 'Alice', email: 'alice@mail.com', birthdate: new Date('1990-01-01').toISOString() },
+      { id: userIds[1], name: 'Bob', email: 'bob@mail.com', birthdate: new Date('1990-01-02').toISOString() },
+      { id: userIds[2], name: 'Charlie', email: 'charlie@mail.com', birthdate: new Date('1990-01-03').toISOString() },
+    ]);
+  });
+
+  it('should return only the number of users specified by limit', async () => {
+    const response = await axios.get(`${BASE_URL}/users?limit=2`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+    expect(response.status).to.equal(200);
+    expect(response.data).to.deep.eq([
+      { id: userIds[0], name: 'Alice', email: 'alice@mail.com', birthdate: new Date('1990-01-01').toISOString() },
+      { id: userIds[1], name: 'Bob', email: 'bob@mail.com', birthdate: new Date('1990-01-02').toISOString() },
+    ]);
+  });
+
+  it('should return 400 for invalid limit parameter', async () => {
+    const response = await axios.get(`${BASE_URL}/users?limit=notanumber`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+      validateStatus: status => status === 400,
+    });
+    expect(response.data).to.include({ error: 'ValidationError' });
+    expect(response.data.code).to.equal('USER_VALIDATION');
+  });
+
+  it('should return 401 if Authorization header is missing', async () => {
+    const response = await axios.get(`${BASE_URL}/users`, {
+      validateStatus: status => status === 401,
+    });
+    expect(response.data).to.include({ error: 'AuthError' });
+    expect(response.data.code).to.equal('AUTH_MISSING_HEADER');
+  });
+
+  it('should return 401 if Authorization token is invalid', async () => {
+    const response = await axios.get(`${BASE_URL}/users`, {
+      headers: { Authorization: 'Bearer invalidtoken' },
+      validateStatus: status => status === 401,
+    });
+    expect(response.data).to.include({ error: 'AuthError' });
+    expect(response.data.code).to.equal('AUTH_INVALID_TOKEN');
+  });
+});
