@@ -2,15 +2,20 @@ import bcrypt from 'bcrypt';
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { prisma } from '../db';
-import type { AuthDTO } from '../types/auth';
+import { isValidCredentialsInput } from '../types/auth';
 import { AuthError, ValidationError } from '../types/errors';
 import { generateToken } from '../utils/jwt';
 
 const authRouter = Router();
 
 authRouter.post('/', async (req: Request, res: Response) => {
-  const credentialsInput = req.body as AuthDTO;
-  const rememberMe = typeof req.body.rememberMe === 'boolean' ? req.body.rememberMe : false;
+  const credentialsInput = req.body;
+
+  if (!isValidCredentialsInput(credentialsInput)) {
+    return;
+  }
+
+  const rememberMe = credentialsInput.rememberMe ?? false;
 
   if (
     !credentialsInput.email ||

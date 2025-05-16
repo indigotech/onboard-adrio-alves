@@ -9,8 +9,9 @@ const SALT_ROUNDS = 10;
 const userRouter = Router();
 
 userRouter.post('/', async (req: Request, res: Response) => {
+  await validateBody(req.body);
+
   const userInput = req.body as UserDTO;
-  await validateBody(userInput);
 
   const hashedPassword = await bcrypt.hash(userInput.password, SALT_ROUNDS);
 
