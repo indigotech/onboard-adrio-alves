@@ -84,6 +84,19 @@ describe('GET /users', () => {
     });
   });
 
+  it('should return empty if skipped is greater than database', async () => {
+    const response = await axios.get(`${BASE_URL}/users?skip=5`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+    expect(response.status).to.equal(200);
+    expect(response.data).to.deep.eq({
+      data: [],
+      total: 3,
+      hasPrevious: true,
+      hasNext: false,
+    });
+  });
+
   it('should return 400 for invalid limit parameter', async () => {
     const response = await axios.get(`${BASE_URL}/users?limit=notanumber`, {
       headers: { Authorization: `Bearer ${jwtToken}` },
