@@ -246,17 +246,24 @@ describe('GET /users/:id', () => {
       headers: { Authorization: `Bearer ${jwtToken}` },
       validateStatus: status => status === 404,
     });
-    expect(response.status).to.equal(404);
-    expect(response.data).to.include({ error: 'NotFoundError' });
+    expect(response.data).to.deep.equal({
+      error: 'NotFoundError',
+      code: 'USER_NOT_FOUND',
+      message: 'Erro de não encontrado: o recurso solicitado não foi encontrado.',
+      details: 'User not found',
+    });
   });
 
   it('should fail if Authorization header is missing', async () => {
     const response = await axios.get(`${BASE_URL}/users/${userId}`, {
       validateStatus: status => status === 401,
     });
-    expect(response.status).to.equal(401);
-    expect(response.data).to.include({ error: 'AuthError' });
-    expect(response.data.code).to.equal('AUTH_MISSING_HEADER');
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      details: 'Authorization header missing',
+      code: 'AUTH_MISSING_HEADER',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
   });
 
   it('should fail if Authorization token is invalid', async () => {
@@ -264,8 +271,11 @@ describe('GET /users/:id', () => {
       headers: { Authorization: 'Bearer invalidtoken' },
       validateStatus: status => status === 401,
     });
-    expect(response.status).to.equal(401);
-    expect(response.data).to.include({ error: 'AuthError' });
-    expect(response.data.code).to.equal('AUTH_INVALID_TOKEN');
+    expect(response.data).to.deep.equal({
+      error: 'AuthError',
+      details: 'Invalid or expired token.',
+      code: 'AUTH_INVALID_TOKEN',
+      message: 'Erro de autenticação: as credenciais fornecidas não são válidas.',
+    });
   });
 });
