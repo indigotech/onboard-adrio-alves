@@ -1,5 +1,5 @@
-import { ValidationError } from '../types/errors';
 import type { Request } from 'express';
+import { ValidationError } from '../types/errors';
 
 export interface PaginationParams {
   limit: number;

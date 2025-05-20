@@ -5,8 +5,8 @@ import { prisma } from '../db';
 import { authenticateJWT } from '../middlewares/auth-middleware';
 import { NotFoundError, ValidationError } from '../types/errors';
 import type { UserDTO } from '../types/user';
+import { buildPaginatedResponse, parsePaginationParams } from '../utils/pagination';
 import { validateBody } from '../utils/validation';
-import { parsePaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 const SALT_ROUNDS = 10;
 const userRouter = Router();
@@ -39,6 +39,7 @@ userRouter.get('/:id', authenticateJWT, async (req: Request, res: Response) => {
   }
   const user = await prisma.user.findUnique({
     where: { id: userId },
+    include: { addresses: true },
   });
 
   if (!user) {
@@ -56,6 +57,7 @@ userRouter.get('/', authenticateJWT, async (req: Request, res: Response) => {
     prisma.user.count(),
     prisma.user.findMany({
       orderBy: { name: 'asc' },
+      include: { addresses: true },
       take: limit,
       skip: skip,
     }),
