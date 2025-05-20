@@ -1,8 +1,8 @@
 import axios from 'axios';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import jwt from 'jsonwebtoken';
+import { beforeEach, describe, it } from 'mocha';
 import { prisma } from '../src/db';
 import { generateToken } from '../src/utils/jwt';
 
