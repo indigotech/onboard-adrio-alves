@@ -6,6 +6,7 @@ import { authenticateJWT } from '../middlewares/auth-middleware';
 import { NotFoundError, ValidationError } from '../types/errors';
 import type { UserDTO } from '../types/user';
 import { validateBody } from '../utils/validation';
+import { parsePaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 const SALT_ROUNDS = 10;
 const userRouter = Router();
@@ -46,6 +47,23 @@ userRouter.get('/:id', authenticateJWT, async (req: Request, res: Response) => {
 
   const { password: _, ...userWithoutPassword } = user;
   res.json(userWithoutPassword);
+});
+
+userRouter.get('/', authenticateJWT, async (req: Request, res: Response) => {
+  const { limit, skip } = parsePaginationParams(req);
+
+  const [total, users] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.findMany({
+      orderBy: { name: 'asc' },
+      take: limit,
+      skip: skip,
+    }),
+  ]);
+
+  const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+  const response = buildPaginatedResponse(usersWithoutPasswords, total, skip, limit);
+  res.json(response);
 });
 
 export { userRouter };
