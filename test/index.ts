@@ -13,7 +13,9 @@ before(async () => {
 });
 
 import './hello-world';
-import './user';
+import './user-get';
+import './users-list';
+import './users-post';
 import './auth';
 
 afterEach(async () => {
