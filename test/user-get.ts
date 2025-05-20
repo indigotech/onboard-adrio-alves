@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import { beforeEach, describe, it } from 'mocha';
 import { prisma } from '../src/db';
 import { generateToken } from '../src/utils/jwt';
+import type { Address } from '@prisma/client';
 
 const PORT = process.env.PORT || 3001;
 const BASE_URL = `http://localhost:${PORT}`;
@@ -12,6 +13,7 @@ const jwtToken = generateToken({ id: 0 });
 
 describe('GET /users/:id', () => {
   let userId: number;
+  let addressObj: Address;
 
   beforeEach(async () => {
     const user = await prisma.user.create({
@@ -20,9 +22,24 @@ describe('GET /users/:id', () => {
         email: 'getuser@mail.com',
         password: await bcrypt.hash('abc123', 10),
         birthdate: new Date('1995-05-15'),
+        addresses: {
+          create: [
+            {
+              cep: '99999-999',
+              street: 'Side St',
+              streetNumber: '456',
+              complement: 'Suite 2',
+              neighborhood: 'Uptown',
+              city: 'Another City',
+              state: 'NY',
+            },
+          ],
+        },
       },
+      include: { addresses: true },
     });
     userId = user.id;
+    addressObj = user.addresses[0];
   });
 
   it('should return user data when authenticated', async () => {
@@ -35,6 +52,19 @@ describe('GET /users/:id', () => {
       name: 'Get User',
       email: 'getuser@mail.com',
       birthdate: new Date('1995-05-15').toISOString(),
+      addresses: [
+        {
+          id: addressObj.id,
+          userId: userId,
+          cep: '99999-999',
+          street: 'Side St',
+          streetNumber: '456',
+          complement: 'Suite 2',
+          neighborhood: 'Uptown',
+          city: 'Another City',
+          state: 'NY',
+        },
+      ],
     });
   });
 

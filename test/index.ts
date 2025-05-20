@@ -19,6 +19,7 @@ import './users-post';
 import './auth';
 
 afterEach(async () => {
+  await prisma.address.deleteMany({});
   await prisma.user.deleteMany({});
 });
 

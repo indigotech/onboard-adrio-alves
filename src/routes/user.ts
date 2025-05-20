@@ -39,6 +39,7 @@ userRouter.get('/:id', authenticateJWT, async (req: Request, res: Response) => {
   }
   const user = await prisma.user.findUnique({
     where: { id: userId },
+    include: { addresses: true },
   });
 
   if (!user) {
@@ -56,6 +57,7 @@ userRouter.get('/', authenticateJWT, async (req: Request, res: Response) => {
     prisma.user.count(),
     prisma.user.findMany({
       orderBy: { name: 'asc' },
+      include: { addresses: true },
       take: limit,
       skip: skip,
     }),
